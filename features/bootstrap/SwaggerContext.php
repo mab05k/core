@@ -86,6 +86,20 @@ final class SwaggerContext implements Context
     }
 
     /**
+     * @Then :prop property should not exist for the Swagger class :class
+     */
+    public function assertPropertyDoesNotExist(string $propertyName, string $className)
+    {
+        try {
+            $this->getPropertyInfo($propertyName, $className);
+        } catch (\InvalidArgumentException $e) {
+            return;
+        }
+
+        throw new ExpectationFailedException(sprintf('Property "%s" of class "%s" should not exist', $propertyName, $className));
+    }
+
+    /**
      * @Then :prop property is required for Swagger class :class
      */
     public function assertPropertyIsRequired(string $propertyName, string $className)

@@ -9,3 +9,32 @@ resources:
         properties:
             foo:
                 description: 'The dummy foo'
+
+    'ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\DummySerializerGroups':
+        attributes:
+            normalization_context:
+                groups:
+                - output
+        itemOperations:
+            get:
+                method: GET
+            put:
+                method: PUT
+                denormalization_context:
+                    groups:
+                    - input
+        properties:
+            id:
+                swagger_context:
+                    example: 1
+            index:
+                swagger_context:
+                    type: string
+            name:
+                iri: http://schema.org/name
+                swagger_context:
+                    type: string
+            description:
+                iri: http://schema.org/description
+                swagger_context:
+                    type: string

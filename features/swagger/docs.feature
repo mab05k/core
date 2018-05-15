@@ -44,6 +44,7 @@ Feature: Documentation support
     And the Swagger class "User-user_user-write" exists
     And the Swagger class "UuidIdentifierDummy" exists
     And the Swagger class "ThirdLevel" exists
+    And the Swagger class "DummySerializerGroups" exists
     And the Swagger class "ParentDummy" doesn't exist
     And the Swagger class "UnknownDummy" doesn't exist
     And the Swagger path "/relation_embedders/{id}/custom" exists
@@ -54,6 +55,8 @@ Feature: Documentation support
     # Properties
     And "id" property exists for the Swagger class "Dummy"
     And "name" property is required for Swagger class "Dummy"
+    And "name" property exists for the Swagger class "DummySerializerGroups-input"
+    And "description" property should not exist for the Swagger class "DummySerializerGroups-input"
     # Filters
     And the JSON node "paths./dummies.get.parameters[0].name" should be equal to "dummyBoolean"
     And the JSON node "paths./dummies.get.parameters[0].in" should be equal to "query"

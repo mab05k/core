@@ -62,12 +62,6 @@ final class ExtractorPropertyNameCollectionFactory implements PropertyNameCollec
             throw new ResourceClassNotFoundException(sprintf('The resource class "%s" does not exist.', $resourceClass));
         }
 
-        if ($properties = $this->extractor->getResources()[$resourceClass]['properties'] ?? false) {
-            foreach ($properties as $propertyName => $property) {
-                $propertyNames[$propertyName] = $propertyName;
-            }
-        }
-
         return new PropertyNameCollection(array_values($propertyNames));
     }
 }
