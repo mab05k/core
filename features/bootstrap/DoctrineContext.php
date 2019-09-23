@@ -101,6 +101,8 @@ use ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\DummyProperty;
 use ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\DummyTableInheritanceNotApiResourceChild;
 use ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\EmbeddableDummy;
 use ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\EmbeddedDummy;
+use ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\ExternalDummy;
+use ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\ExternalResource;
 use ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\ExternalUser;
 use ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\FileConfigDummy;
 use ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity\Foo;
@@ -1505,6 +1507,24 @@ final class DoctrineContext implements Context
         $this->manager->flush();
     }
 
+    /**
+     * @Given there are :nb externalResource objects
+     */
+    public function thereAreExternalDummies(int $nb)
+    {
+        for ($i = 1; $i <= $nb; ++$i) {
+            $externalDummy = $this->buildExternalDummy();
+            $externalResource = $this->buildExternalResource();
+            $externalResource->externalDummy = $externalDummy;
+            $externalDummy->externalResource = $externalResource;
+
+            $this->manager->persist($externalDummy);
+            $this->manager->persist($externalResource);
+        }
+
+        $this->manager->flush();
+    }
+
     private function isOrm(): bool
     {
         return null !== $this->schemaTool;
@@ -1889,5 +1909,21 @@ final class DoctrineContext implements Context
     private function buildAbsoluteUrlRelationDummy()
     {
         return $this->isOrm() ? new AbsoluteUrlRelationDummy() : new AbsoluteUrlRelationDummyDocument();
+    }
+
+    /**
+     * @return ExternalDummy
+     */
+    private function buildExternalDummy()
+    {
+        return new ExternalDummy();
+    }
+
+    /**
+     * @return ExternalResource
+     */
+    private function buildExternalResource()
+    {
+        return new ExternalResource();
     }
 }

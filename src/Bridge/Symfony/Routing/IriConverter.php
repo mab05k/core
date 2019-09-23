@@ -25,15 +25,18 @@ use ApiPlatform\Core\DataProvider\SubresourceDataProviderInterface;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use ApiPlatform\Core\Exception\InvalidIdentifierException;
 use ApiPlatform\Core\Exception\ItemNotFoundException;
+use ApiPlatform\Core\Exception\ResourceClassNotFoundException;
 use ApiPlatform\Core\Exception\RuntimeException;
 use ApiPlatform\Core\Identifier\IdentifierConverterInterface;
 use ApiPlatform\Core\Metadata\Property\Factory\PropertyMetadataFactoryInterface;
 use ApiPlatform\Core\Metadata\Property\Factory\PropertyNameCollectionFactoryInterface;
+use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Core\Util\AttributesExtractor;
 use ApiPlatform\Core\Util\ResourceClassInfoTrait;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Routing\Exception\ExceptionInterface as RoutingExceptionInterface;
+use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
@@ -51,7 +54,7 @@ final class IriConverter implements IriConverterInterface
     private $identifiersExtractor;
     private $absoluteUrl;
 
-    public function __construct(PropertyNameCollectionFactoryInterface $propertyNameCollectionFactory, PropertyMetadataFactoryInterface $propertyMetadataFactory, ItemDataProviderInterface $itemDataProvider, RouteNameResolverInterface $routeNameResolver, RouterInterface $router, PropertyAccessorInterface $propertyAccessor = null, IdentifiersExtractorInterface $identifiersExtractor = null, SubresourceDataProviderInterface $subresourceDataProvider = null, IdentifierConverterInterface $identifierConverter = null, ResourceClassResolverInterface $resourceClassResolver = null, bool $absoluteUrl = false)
+    public function __construct(PropertyNameCollectionFactoryInterface $propertyNameCollectionFactory, PropertyMetadataFactoryInterface $propertyMetadataFactory, ItemDataProviderInterface $itemDataProvider, RouteNameResolverInterface $routeNameResolver, RouterInterface $router, PropertyAccessorInterface $propertyAccessor = null, IdentifiersExtractorInterface $identifiersExtractor = null, SubresourceDataProviderInterface $subresourceDataProvider = null, IdentifierConverterInterface $identifierConverter = null, ResourceClassResolverInterface $resourceClassResolver = null, ResourceMetadataFactoryInterface $resourceMetadataFactory, bool $absoluteUrl = false)
     {
         $this->itemDataProvider = $itemDataProvider;
         $this->routeNameResolver = $routeNameResolver;
@@ -60,6 +63,7 @@ final class IriConverter implements IriConverterInterface
         $this->subresourceDataProvider = $subresourceDataProvider;
         $this->identifierConverter = $identifierConverter;
         $this->resourceClassResolver = $resourceClassResolver;
+        $this->resourceMetadataFactory = $resourceMetadataFactory;
         $this->absoluteUrl = $absoluteUrl;
 
         if (null === $identifiersExtractor) {
@@ -139,7 +143,7 @@ final class IriConverter implements IriConverterInterface
     public function getIriFromResourceClass(string $resourceClass, int $referenceType = UrlGeneratorInterface::ABS_PATH): string
     {
         try {
-            return $this->generate($this->routeNameResolver->getRouteName($resourceClass, OperationType::COLLECTION), [], $referenceType);
+            return $this->generate($resourceClass, $this->routeNameResolver->getRouteName($resourceClass, OperationType::COLLECTION), [], $referenceType);
         } catch (RoutingExceptionInterface $e) {
             throw new InvalidArgumentException(sprintf('Unable to generate an IRI for "%s".', $resourceClass), $e->getCode(), $e);
         }
@@ -155,7 +159,7 @@ final class IriConverter implements IriConverterInterface
         try {
             $identifiers = $this->generateIdentifiersUrl($identifiers, $resourceClass);
 
-            return $this->generate($routeName, ['id' => implode(';', $identifiers)], $referenceType);
+            return $this->generate($resourceClass, $routeName, ['id' => implode(';', $identifiers)], $referenceType);
         } catch (RoutingExceptionInterface $e) {
             throw new InvalidArgumentException(sprintf(
                 'Unable to generate an IRI for "%s".',
@@ -170,7 +174,7 @@ final class IriConverter implements IriConverterInterface
     public function getSubresourceIriFromResourceClass(string $resourceClass, array $context, int $referenceType = UrlGeneratorInterface::ABS_PATH): string
     {
         try {
-            return $this->generate($this->routeNameResolver->getRouteName($resourceClass, OperationType::SUBRESOURCE, $context), $context['subresource_identifiers'], $referenceType);
+            return $this->generate($resourceClass, $this->routeNameResolver->getRouteName($resourceClass, OperationType::SUBRESOURCE, $context), $context['subresource_identifiers'], $referenceType);
         } catch (RoutingExceptionInterface $e) {
             throw new InvalidArgumentException(sprintf('Unable to generate an IRI for "%s".', $resourceClass), $e->getCode(), $e);
         }
@@ -180,9 +184,22 @@ final class IriConverter implements IriConverterInterface
      * @param array $parameters
      * @param int   $referenceType
      */
-    private function generate(string $name, $parameters = [], $referenceType = UrlGeneratorInterface::ABS_PATH): string
+    private function generate(string $resourceClass, string $name, $parameters = [], $referenceType = UrlGeneratorInterface::ABS_PATH): string
     {
-        return $this->router->generate($name, $parameters, true === $this->absoluteUrl ? UrlGeneratorInterface::ABS_URL : $referenceType);
+        $context = $this->router->getContext();
+        $iri = '';
+        try {
+            $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
+            if ($externalResource = $resourceMetadata->getAttribute('externalResource', null)) {
+                $this->router->setContext($this->createExternalResourceContext($externalResource, $context));
+            }
+            $iri = $this->router->generate($name, $parameters, true === $this->absoluteUrl ? UrlGeneratorInterface::ABS_URL : $referenceType);
+        } catch (ResourceClassNotFoundException $ex) {
+            $iri = $this->router->generate($name, $parameters, true === $this->absoluteUrl ? UrlGeneratorInterface::ABS_URL : $referenceType);
+        } finally {
+            $this->router->setContext($context);
+            return $iri;
+        }
     }
 
     /**
@@ -210,5 +227,15 @@ final class IriConverter implements IriConverterInterface
         }
 
         return array_values($identifiers);
+    }
+
+    private function createExternalResourceContext(array $externalResource, RequestContext $requestContext): RequestContext
+    {
+        return (new RequestContext())
+            ->setHost($externalResource['host'] ?? $requestContext->getHost())
+            ->setScheme($externalResource['scheme'] ?? $requestContext->getScheme())
+            ->setBaseUrl($externalResource['baseUrl'] ?? $requestContext->getBaseUrl())
+            ->setHttpPort($externalResource['httpPort'] ?? $requestContext->getHttpPort())
+            ->setHttpsPort($externalResource['httpsPort'] ?? $requestContext->getHttpsPort());
     }
 }

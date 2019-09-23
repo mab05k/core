@@ -19,7 +19,8 @@ web_profiler:
 doctrine:
     dbal:
         driver:                       'pdo_sqlite'
-        path:                         '%kernel.cache_dir%/db.sqlite'
+#        path:                         '%kernel.cache_dir%/db.sqlite'
+        path:                         '/var/opt/api-platform/db.sqlite'
         charset:                      'UTF8'
         types:
             uuid:  Ramsey\Uuid\Doctrine\UuidType

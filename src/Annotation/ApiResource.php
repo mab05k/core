@@ -36,6 +36,7 @@ use ApiPlatform\Core\Exception\InvalidArgumentException;
  *     @Attribute("deprecationReason", type="string"),
  *     @Attribute("description", type="string"),
  *     @Attribute("elasticsearch", type="bool"),
+ *     @Attribute("externalResource", type="array"),
  *     @Attribute("fetchPartial", type="bool"),
  *     @Attribute("forceEager", type="bool"),
  *     @Attribute("formats", type="array"),
@@ -162,6 +163,13 @@ final class ApiResource
      * @var bool
      */
     private $elasticsearch;
+
+    /**
+     * @see https://github.com/Haehnchen/idea-php-annotation-plugin/issues/112
+     *
+     * @var array
+     */
+    private $externalResource;
 
     /**
      * @see https://github.com/Haehnchen/idea-php-annotation-plugin/issues/112
