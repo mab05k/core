@@ -3,32 +3,34 @@
 
 namespace ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity;
 
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
-use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ApiResource(attributes={"externalResource"={"host"="external.com","scheme"="https","baseUrl"="/api"}})
- * @ORM\Entity
+ * Class ExternalResource
+ * @package ApiPlatform\Core\Tests\Fixtures\TestBundle\Entity
+ * @ApiResource(
+ *     itemOperations={"get"={"method"="get"}},
+ *     collectionOperations={},
+ *     attributes={
+ *          "externalResource"={
+ *              "scheme"="https",
+ *              "host"="external.com",
+ *              "absoluteUrl"=true
+ *          }
+ *     }
+ * )
  */
 class ExternalResource
 {
     /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @var null|int|string
+     * @ApiProperty(identifier=true)
      */
-    private $id;
+    public $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="ExternalDummy", inversedBy="externalResource")
-     */
-    public $externalDummy;
-
-    /**
-     * @return mixed
-     */
-    public function getId()
+    public function __construct($id = null)
     {
-        return $this->id;
+        $this->id = $id;
     }
 }

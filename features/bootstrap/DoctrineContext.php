@@ -1514,12 +1514,9 @@ final class DoctrineContext implements Context
     {
         for ($i = 1; $i <= $nb; ++$i) {
             $externalDummy = $this->buildExternalDummy();
-            $externalResource = $this->buildExternalResource();
-            $externalResource->externalDummy = $externalDummy;
-            $externalDummy->externalResource = $externalResource;
+            $externalDummy->externalResource = new ExternalResource(1);
 
             $this->manager->persist($externalDummy);
-            $this->manager->persist($externalResource);
         }
 
         $this->manager->flush();
@@ -1917,13 +1914,5 @@ final class DoctrineContext implements Context
     private function buildExternalDummy()
     {
         return new ExternalDummy();
-    }
-
-    /**
-     * @return ExternalResource
-     */
-    private function buildExternalResource()
-    {
-        return new ExternalResource();
     }
 }

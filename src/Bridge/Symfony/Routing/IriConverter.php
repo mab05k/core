@@ -79,6 +79,7 @@ final class IriConverter implements IriConverterInterface
     {
         try {
             $parameters = $this->router->match($iri);
+            var_dump($parameters);
         } catch (RoutingExceptionInterface $e) {
             throw new InvalidArgumentException(sprintf('No route matches "%s".', $iri), $e->getCode(), $e);
         }
@@ -186,20 +187,9 @@ final class IriConverter implements IriConverterInterface
      */
     private function generate(string $resourceClass, string $name, $parameters = [], $referenceType = UrlGeneratorInterface::ABS_PATH): string
     {
-        $context = $this->router->getContext();
-        $iri = '';
-        try {
-            $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
-            if ($externalResource = $resourceMetadata->getAttribute('externalResource', null)) {
-                $this->router->setContext($this->createExternalResourceContext($externalResource, $context));
-            }
-            $iri = $this->router->generate($name, $parameters, true === $this->absoluteUrl ? UrlGeneratorInterface::ABS_URL : $referenceType);
-        } catch (ResourceClassNotFoundException $ex) {
-            $iri = $this->router->generate($name, $parameters, true === $this->absoluteUrl ? UrlGeneratorInterface::ABS_URL : $referenceType);
-        } finally {
-            $this->router->setContext($context);
-            return $iri;
-        }
+        $referenceType = true === $this->absoluteUrl ? UrlGeneratorInterface::ABS_URL : $referenceType;
+
+        return $this->checkExternalResource($resourceClass, $name, $parameters, $referenceType) ?? $this->router->generate($name, $parameters, $referenceType);
     }
 
     /**
@@ -227,6 +217,25 @@ final class IriConverter implements IriConverterInterface
         }
 
         return array_values($identifiers);
+    }
+
+    private function checkExternalResource(string $resourceClass, string $name, array $parameters, int $referenceType): ?string
+    {
+        $context = $this->router->getContext();
+        $iri = null;
+        try {
+            $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
+            if ($externalResource = $resourceMetadata->getAttribute('externalResource', null)) {
+                $referenceType = ($externalResource['absoluteUrl'] ?? false) ? UrlGeneratorInterface::ABS_URL : $referenceType;
+                $this->router->setContext($this->createExternalResourceContext($externalResource, $context));
+                $iri = $this->router->generate($name, $parameters, $referenceType);
+            }
+        } catch (ResourceClassNotFoundException $ex) {
+            $iri = null;
+        } finally {
+            $this->router->setContext($context);
+            return $iri;
+        }
     }
 
     private function createExternalResourceContext(array $externalResource, RequestContext $requestContext): RequestContext

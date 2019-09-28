@@ -417,10 +417,12 @@ abstract class AbstractItemNormalizer extends AbstractObjectNormalizer
     protected function denormalizeRelation(string $attributeName, PropertyMetadata $propertyMetadata, string $className, $value, ?string $format, array $context)
     {
         $supportsPlainIdentifiers = $this->supportsPlainIdentifiers();
-
         if (\is_string($value)) {
             try {
-                return $this->iriConverter->getItemFromIri($value, $context + ['fetch_data' => true]);
+
+                $data = $this->iriConverter->getItemFromIri($value, $context + ['fetch_data' => true]);
+                var_dump($data, 'wtf');
+                return $data;
             } catch (ItemNotFoundException $e) {
                 if (!$supportsPlainIdentifiers) {
                     throw new UnexpectedValueException($e->getMessage(), $e->getCode(), $e);

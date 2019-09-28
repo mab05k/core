@@ -24,6 +24,7 @@ doctrine:
         charset:                      'UTF8'
         types:
             uuid:  Ramsey\Uuid\Doctrine\UuidType
+            external_resource_type: ApiPlatform\Core\Tests\Fixtures\TestBundle\Bridge\Doctrine\DBAL\Types\ExternalResourceType
 
     orm:
         auto_generate_proxy_classes:   '%kernel.debug%'

@@ -20,7 +20,8 @@ class ExternalDummy
     private $id;
 
     /**
-     * @ORM\OneToOne(targetEntity="ExternalResource", mappedBy="externalDummy", cascade={"PERSIST"})
+     * @var ExternalResource
+     * @ORM\Column(type="external_resource_type")
      */
     public $externalResource;
 
