@@ -36,5 +36,14 @@ Feature: IRI should change for external resources
       "externalResource": "https://external.com/external_resources/2"
     }
     """
-    And print last response
     And the response status code should be 201
+    And the JSON should be equal to:
+    """
+    {
+      "@context": "\/contexts\/ExternalDummy",
+      "@id": "\/external_dummies\/2",
+      "@type": "ExternalDummy",
+      "externalResource": "https:\/\/external.com\/external_resources\/2",
+      "id": 2
+    }
+    """

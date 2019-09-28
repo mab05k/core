@@ -105,6 +105,12 @@ services:
         tags:
             -  { name: 'api_platform.item_data_provider' }
 
+    external_resource.item_data_provider:
+        class: 'ApiPlatform\Core\Tests\Fixtures\TestBundle\DataProvider\ExternalResourceDataProvider'
+        public: false
+        tags:
+            - { name: 'api_platform.item_data_provider'}
+
     serializable.item_data_provider:
         class: 'ApiPlatform\Core\Tests\Fixtures\TestBundle\DataProvider\SerializableItemDataProvider'
         public: false

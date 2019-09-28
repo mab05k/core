@@ -79,7 +79,6 @@ final class IriConverter implements IriConverterInterface
     {
         try {
             $parameters = $this->router->match($iri);
-            var_dump($parameters);
         } catch (RoutingExceptionInterface $e) {
             throw new InvalidArgumentException(sprintf('No route matches "%s".', $iri), $e->getCode(), $e);
         }
